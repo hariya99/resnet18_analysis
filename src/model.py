@@ -40,14 +40,14 @@ class Model:
         self.test_loss_list = []
         self.test_accuracy_list = []
         
-    def assign_net(self, net='resnet18', blocks_list=[2,1,1,1]):
+    def assign_net(self, net='resnet18', blocks_list=[2,2,2,2], out_channels_list=[64,128,256,512]):
         ''' 
             net: provide the type of neural net you want to run. 
             blocks_list: There are 4 layers so provide a list with 4 elements. 
             Each element is the number of blocks inside a layer.
         '''
         if(net.lower() == 'resnet18'):
-            self.net = ResNet18(blocks_list)
+            self.net = ResNet18(blocks_list, out_channels_list)
             self.net.to(self.device)
 
     def prepare_data(self, train_batch=128, test_batch=100, workers=2):
