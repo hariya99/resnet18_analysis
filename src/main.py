@@ -24,7 +24,7 @@ def main():
     model = Model()
     model.assign_net(args.m)
     model.prepare_data(128, 100, 2)
-    model.assign_optimizer(args.o)
+    model.assign_optimizer(args.o, args.lr)
 
     for epoch in range(args.e): 
         model.train()

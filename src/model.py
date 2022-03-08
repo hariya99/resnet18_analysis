@@ -17,7 +17,7 @@ class Model:
         model = Model()
         model.assign_net(net) e.g resnet18
         model.prepare_data(train_batch, test_batch, workers)
-        model.assign_optimizer(optimizer) e.g. sgd
+        model.assign_optimizer(optimizer, lr) e.g. sgd
         loop for epochs 
             model.train()
         model.test()
@@ -38,6 +38,7 @@ class Model:
     def assign_net(self, net='resnet18'):
         if(net.lower() == 'resnet18'):
             self.net = ResNet18()
+            self.net.to(self.device)
 
     def prepare_data(self, train_batch=128, test_batch=100, workers=2):
         '''
@@ -67,20 +68,20 @@ class Model:
         self.test_loader = torch.utils.data.DataLoader(
             testset, batch_size=test_batch, shuffle=False, num_workers=workers)
 
-    def assign_optimizer(self, optim):
+    def assign_optimizer(self, optimizer, lr):
         # choose optimizer
-        if (optim.lower() == "sgdn"):
-            self.optimizer = optim.SGD(net.parameters(), lr=args.lr,
+        if (optimizer.lower() == "sgdn"):
+            self.optimizer = optim.SGD(self.net.parameters(), lr=lr,
                                 momentum=0.9, weight_decay=5e-4, nesterov=True)
-        elif (optim.lower() == "adagrad"):
-            self.optimizer = optim.Adagrad(net.parameters(), lr=args.lr, weight_decay=5e-4)
-        elif (optim.lower() == "adadelta"):
-            self.optimizer = optim.SGD(net.parameters(), lr=args.lr, weight_decay=5e-4)
-        elif (optim.lower() == "adam"):
-            self.optimizer = optim.Adam(net.parameters(), lr=args.lr, weight_decay=5e-4)
+        elif (optimizer.lower() == "adagrad"):
+            self.optimizer = optim.Adagrad(self.net.parameters(), lr=lr, weight_decay=5e-4)
+        elif (optimizer.lower() == "adadelta"):
+            self.optimizer = optim.SGD(self.net.parameters(), lr=lr, weight_decay=5e-4)
+        elif (optimizer.lower() == "adam"):
+            self.optimizer = optim.Adam(self.net.parameters(), lr=lr, weight_decay=5e-4)
         else:
             # default
-            self.optimizer = optim.SGD(net.parameters(), lr=args.lr,
+            self.optimizer = optim.SGD(self.net.parameters(), lr=lr,
                                 momentum=0.9, weight_decay=5e-4)
         self.scheduler = self._set_scheduler()
 
@@ -92,58 +93,58 @@ class Model:
 
     def _set_scheduler(self):
         return torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=200)
-# Training
-def train(self):
+    # Training
+    def train(self):
 
-    self.net.train()
-    train_loss = 0
-    correct = 0
-    total = 0
+        self.net.train()
+        train_loss = 0
+        correct = 0
+        total = 0
 
-    
-    for batch_idx, (inputs, targets) in enumerate(self.train_loader):
         
-        inputs, targets = inputs.to(self.device), targets.to(self.device)
-        self.optimizer.zero_grad()
-        outputs = self.net(inputs)
-        loss = self.criterion(outputs, targets)
-        loss.backward()
-        self.optimizer.step()
-
-        train_loss += loss.item()
-        _, predicted = outputs.max(1)
-        total += targets.size(0)
-        correct += predicted.eq(targets).sum().item()
-    
-    # print statistics 
-    self._print_stats(f'Correct|Total : {correct}|{total}', 
-                train_loss/len(self.train_loader), correct/total)
-
-
-def test(self):
-
-    self.net.eval()
-    test_loss = 0
-    correct = 0
-    total = 0
-
-    with torch.no_grad():
-        for batch_idx, (inputs, targets) in enumerate(self.test_loader):
+        for batch_idx, (inputs, targets) in enumerate(self.train_loader):
+            
             inputs, targets = inputs.to(self.device), targets.to(self.device)
+            self.optimizer.zero_grad()
             outputs = self.net(inputs)
             loss = self.criterion(outputs, targets)
+            loss.backward()
+            self.optimizer.step()
 
-            test_loss += loss.item()
+            train_loss += loss.item()
             _, predicted = outputs.max(1)
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
+        
+        # print statistics 
+        self._print_stats(f'Correct|Total : {correct}|{total}', 
+                    train_loss/len(self.train_loader), correct/total)
 
-    # print statistics 
-    self._print_stats(f'Correct|Total : {correct}|{total}', 
-                train_loss/len(self.test_loader), correct/total)
 
-def _print_stats(msg, train_loss, train_acc):
-    print("*****Epoch Statistics*****")
-    print(msg)
-    print("Epoch training loss: ", train_loss)
-    print("Epoch training accuracy: ", train_acc)
+    def test(self):
+
+        self.net.eval()
+        test_loss = 0
+        correct = 0
+        total = 0
+
+        with torch.no_grad():
+            for batch_idx, (inputs, targets) in enumerate(self.test_loader):
+                inputs, targets = inputs.to(self.device), targets.to(self.device)
+                outputs = self.net(inputs)
+                loss = self.criterion(outputs, targets)
+
+                test_loss += loss.item()
+                _, predicted = outputs.max(1)
+                total += targets.size(0)
+                correct += predicted.eq(targets).sum().item()
+
+        # print statistics 
+        self._print_stats(f'Correct|Total : {correct}|{total}', 
+                    train_loss/len(self.test_loader), correct/total)
+
+    def _print_stats(self, msg, train_loss, train_acc):
+        print("*****Epoch Statistics*****")
+        print(msg)
+        print("Epoch training loss: ", train_loss)
+        print("Epoch training accuracy: ", train_acc)
