@@ -63,5 +63,13 @@ class ResNet(nn.Module):
         out = self.linear(out)
         return out
 
-def ResNet18():
-    return ResNet(BasicBlock, [2, 2, 2, 2])
+def ResNet18(block_list):
+    # number of blocks in each layer
+    # blocks_list = [2, 2, 2, 2]
+    return ResNet(BasicBlock, blocks_list)
+
+if __name__ == "__main__":
+
+    from torchinfo import summary
+    model = ResNet18([2,1,1,1])
+    summary(model, input_size=(128, 3, 32, 32))

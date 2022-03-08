@@ -1,5 +1,6 @@
 import argparse
 from model import Model
+from torchinfo import summary
 
 def parse_args():
     
@@ -17,6 +18,16 @@ def parse_args():
     print("Current Args: ", args)
     return args
     # parsing ends 
+    
+def print_params_summary(model, batch_size, channels, rows, cols):
+
+    dash = '='
+    s = 'Pytorch Model Details'
+    rep = int((100 - len(s))/2)
+    
+    print(dash*rep + s + dash*rep)
+    print(model)
+    summary(model, input_size=(batch_size, channels, rows, cols))
 
 def main():
     args = parse_args()
@@ -30,6 +41,15 @@ def main():
         model.train()
     
     model.test()
+    
+    # print statistics 
+    model.print_stats()
+    
+    # plot the statistics 
+    # model.plot_stats()
+
+    # print summary of the model and its parameters
+    # print_params_summary(model.net, 128, 3, 32, 32)
 
 if __name__ == "__main__":
     main()

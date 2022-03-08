@@ -6,6 +6,7 @@ import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
 import torchvision
 import torchvision.transforms as transforms
+import matplotlib.pyplot as plt 
 
 # local imports
 from cnns import ResNet18
@@ -34,10 +35,19 @@ class Model:
         self.criterion = self._set_criterion()
         # self.batch_size = batch_size
         # self.workers = workers
+        self.train_loss_list = []
+        self.train_accuracy_list = []
+        self.test_loss_list = []
+        self.test_accuracy_list = []
         
-    def assign_net(self, net='resnet18'):
+    def assign_net(self, net='resnet18', blocks_list=[2,1,1,1]):
+        ''' 
+            net: provide the type of neural net you want to run. 
+            blocks_list: There are 4 layers so provide a list with 4 elements. 
+            Each element is the number of blocks inside a layer.
+        '''
         if(net.lower() == 'resnet18'):
-            self.net = ResNet18()
+            self.net = ResNet18(blocks_list)
             self.net.to(self.device)
 
     def prepare_data(self, train_batch=128, test_batch=100, workers=2):
@@ -117,8 +127,10 @@ class Model:
             correct += predicted.eq(targets).sum().item()
         
         # print statistics 
-        self._print_stats(f'Correct|Total : {correct}|{total}', 'train',
-                    train_loss/len(self.train_loader), correct/total)
+        # self._print_stats(f'Correct|Total : {correct}|{total}', 'train',
+        #             train_loss/len(self.train_loader), correct/total)
+        self.train_loss_list.append(train_loss/len(self.train_loader))
+        self.train_accuracy_list.append((correct/total) * 100)
 
 
     def test(self):
@@ -140,11 +152,31 @@ class Model:
                 correct += predicted.eq(targets).sum().item()
 
         # print statistics 
-        self._print_stats(f'Correct|Total : {correct}|{total}', 'test',
-                    test_loss/len(self.test_loader), correct/total)
+        # self._print_stats(f'Correct|Total : {correct}|{total}', 'test',
+        #             test_loss/len(self.test_loader), correct/total)
+        
+        self.test_loss_list.append(test_loss/len(self.test_loader))
+        self.test_accuracy_list.append((correct/total) * 100)
 
-    def _print_stats(self, msg, run_type, loss, acc):
-        print("*****Epoch Statistics*****")
-        print(msg)
-        print(f"Epoch {run_type} loss: ", loss)
-        print(f"Epoch {run_type} accuracy: ", acc)
+    def print_stats(self):
+        dash = '*'
+        s = 'Model Statistics'
+        rep = int((100 - len(s))/2)
+        print(dash*rep + s + dash*rep)
+        print(f"Train Loss     : {min(self.train_loss_list)}")
+        print(f"Train Accuracy : {max(self.train_accuracy_list)}")
+        print(f"Test Loss      : {min(self.test_loss_list)}")
+        print(f"Test Accuracy  : {max(self.test_accuracy_list)}")
+
+
+    def plot_stats(self):
+        fig, axs = plt.subplots(nrows=2, ncols=2)
+        fig.suptitle('Error, Accuracy Plots')
+        axs[0, 0].plot(range(len(self.train_loss_list)), self.train_loss_list)
+        axs[0, 0].set_title('Train Error')
+        axs[0, 1].plot(range(len(self.train_accuracy_list)), self.train_accuracy_list, 'tab:orange')
+        axs[0, 1].set_title('Train Accuracy')
+        axs[1, 0].plot(range(len(self.test_loss_list)), self.test_loss_list, 'tab:green')
+        axs[1, 0].set_title('Test Loss')
+        axs[1, 1].plot(range(len(self.test_accuracy_list)), self.test_accuracy_list, 'tab:red')
+        axs[1, 1].set_title('Test Accuracy')
