@@ -1,66 +1,149 @@
+# torch imports 
 import torch
 import torch.nn as nn
+import torch.optim as optim
 import torch.nn.functional as F
-class BasicBlock(nn.Module):
+import torch.backends.cudnn as cudnn
+import torchvision
+import torchvision.transforms as transforms
 
-    def __init__(self, in_planes, planes, stride=1):
-        super(BasicBlock, self).__init__()
-        self.conv1 = nn.Conv2d(
-            in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
-        self.bn1 = nn.BatchNorm2d(planes)
-        self.conv2 = nn.Conv2d(planes, planes, kernel_size=3,
-                               stride=1, padding=1, bias=False)
-        self.bn2 = nn.BatchNorm2d(planes)
+# local imports
+from cnns import ResNet18
 
-        self.shortcut = nn.Sequential()
-        if stride != 1 or in_planes != planes:
-            self.shortcut = nn.Sequential(
-                nn.Conv2d(in_planes, planes,
-                          kernel_size=1, stride=stride, bias=False),
-                nn.BatchNorm2d(planes)
-            )
-
-    def forward(self, x):
-        out = F.relu(self.bn1(self.conv1(x)))
-        out = self.bn2(self.conv2(out))
-        out += self.shortcut(x)
-        out = F.relu(out)
-        return out
+class Model:
+    '''
+        Model class has all the code needed to invoke a model
+        Usage: 
+        model = Model()
+        model.assign_net(net) e.g resnet18
+        model.prepare_data(train_batch, test_batch, workers)
+        model.assign_optimizer(optimizer) e.g. sgd
+        loop for epochs 
+            model.train()
+        model.test()
 
 
+    '''
+    def __init__(self):
+        self.train_loader = None
+        self.test_loader = None
+        self.optimizer= None
+        self.scheduler = None 
+        self.net = None
+        self.device = self._set_device()
+        self.criterion = self._set_criterion()
+        # self.batch_size = batch_size
+        # self.workers = workers
+        
+    def assign_net(self, net='resnet18'):
+        if(net.lower() == 'resnet18'):
+            self.net = ResNet18()
 
-class ResNet(nn.Module):
-    def __init__(self, block, num_blocks, num_classes=10):
-        super(ResNet, self).__init__()
-        self.in_planes = 64
+    def prepare_data(self, train_batch=128, test_batch=100, workers=2):
+        '''
+            Supply train, test batch sizes and number of data workers
+        '''
+        transform_train = transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
 
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=3,
-                               stride=1, padding=1, bias=False)
-        self.bn1 = nn.BatchNorm2d(64)
-        self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1)
-        self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)
-        self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
-        self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
-        self.linear = nn.Linear(512, num_classes)
+        transform_test = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
 
-    def _make_layer(self, block, planes, num_blocks, stride):
-        strides = [stride] + [1]*(num_blocks-1)
-        layers = []
-        for stride in strides:
-            layers.append(block(self.in_planes, planes, stride))
-            self.in_planes = planes
-        return nn.Sequential(*layers)
+        trainset = torchvision.datasets.CIFAR10(
+            root='../data', train=True, download=True, transform=transform_train)
 
-    def forward(self, x):
-        out = F.relu(self.bn1(self.conv1(x)))
-        out = self.layer1(out)
-        out = self.layer2(out)
-        out = self.layer3(out)
-        out = self.layer4(out)
-        out = F.avg_pool2d(out, 4)
-        out = out.view(out.size(0), -1)
-        out = self.linear(out)
-        return out
+        self.train_loader = torch.utils.data.DataLoader(
+            trainset, batch_size=train_batch, shuffle=True, num_workers=workers)
 
-def ResNet18():
-    return ResNet(BasicBlock, [2, 2, 2, 2])
+        testset = torchvision.datasets.CIFAR10(
+            root='../data', train=False, download=True, transform=transform_test)
+
+        self.test_loader = torch.utils.data.DataLoader(
+            testset, batch_size=test_batch, shuffle=False, num_workers=workers)
+
+    def assign_optimizer(self, optim):
+        # choose optimizer
+        if (optim.lower() == "sgdn"):
+            self.optimizer = optim.SGD(net.parameters(), lr=args.lr,
+                                momentum=0.9, weight_decay=5e-4, nesterov=True)
+        elif (optim.lower() == "adagrad"):
+            self.optimizer = optim.Adagrad(net.parameters(), lr=args.lr, weight_decay=5e-4)
+        elif (optim.lower() == "adadelta"):
+            self.optimizer = optim.SGD(net.parameters(), lr=args.lr, weight_decay=5e-4)
+        elif (optim.lower() == "adam"):
+            self.optimizer = optim.Adam(net.parameters(), lr=args.lr, weight_decay=5e-4)
+        else:
+            # default
+            self.optimizer = optim.SGD(net.parameters(), lr=args.lr,
+                                momentum=0.9, weight_decay=5e-4)
+        self.scheduler = self._set_scheduler()
+
+    def _set_device(self):
+        return 'cuda' if (torch.cuda.is_available()) else 'cpu'
+
+    def _set_criterion(self):
+        return nn.CrossEntropyLoss()
+
+    def _set_scheduler(self):
+        return torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=200)
+# Training
+def train(self):
+
+    self.net.train()
+    train_loss = 0
+    correct = 0
+    total = 0
+
+    
+    for batch_idx, (inputs, targets) in enumerate(self.train_loader):
+        
+        inputs, targets = inputs.to(self.device), targets.to(self.device)
+        self.optimizer.zero_grad()
+        outputs = self.net(inputs)
+        loss = self.criterion(outputs, targets)
+        loss.backward()
+        self.optimizer.step()
+
+        train_loss += loss.item()
+        _, predicted = outputs.max(1)
+        total += targets.size(0)
+        correct += predicted.eq(targets).sum().item()
+    
+    # print statistics 
+    self._print_stats(f'Correct|Total : {correct}|{total}', 
+                train_loss/len(self.train_loader), correct/total)
+
+
+def test(self):
+
+    self.net.eval()
+    test_loss = 0
+    correct = 0
+    total = 0
+
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(self.test_loader):
+            inputs, targets = inputs.to(self.device), targets.to(self.device)
+            outputs = self.net(inputs)
+            loss = self.criterion(outputs, targets)
+
+            test_loss += loss.item()
+            _, predicted = outputs.max(1)
+            total += targets.size(0)
+            correct += predicted.eq(targets).sum().item()
+
+    # print statistics 
+    self._print_stats(f'Correct|Total : {correct}|{total}', 
+                train_loss/len(self.test_loader), correct/total)
+
+def _print_stats(msg, train_loss, train_acc):
+    print("*****Epoch Statistics*****")
+    print(msg)
+    print("Epoch training loss: ", train_loss)
+    print("Epoch training accuracy: ", train_acc)
