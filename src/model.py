@@ -117,7 +117,7 @@ class Model:
             correct += predicted.eq(targets).sum().item()
         
         # print statistics 
-        self._print_stats(f'Correct|Total : {correct}|{total}', 
+        self._print_stats(f'Correct|Total : {correct}|{total}', 'train',
                     train_loss/len(self.train_loader), correct/total)
 
 
@@ -140,7 +140,7 @@ class Model:
                 correct += predicted.eq(targets).sum().item()
 
         # print statistics 
-        self._print_stats(f'Correct|Total : {correct}|{total}', 
+        self._print_stats(f'Correct|Total : {correct}|{total}', 'test',
                     test_loss/len(self.test_loader), correct/total)
 
     def _print_stats(self, msg, run_type, loss, acc):
