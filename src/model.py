@@ -141,10 +141,10 @@ class Model:
 
         # print statistics 
         self._print_stats(f'Correct|Total : {correct}|{total}', 
-                    train_loss/len(self.test_loader), correct/total)
+                    test_loss/len(self.test_loader), correct/total)
 
-    def _print_stats(self, msg, train_loss, train_acc):
+    def _print_stats(self, msg, run_type, loss, acc):
         print("*****Epoch Statistics*****")
         print(msg)
-        print("Epoch training loss: ", train_loss)
-        print("Epoch training accuracy: ", train_acc)
+        print(f"Epoch {run_type} loss: ", loss)
+        print(f"Epoch {run_type} accuracy: ", acc)
