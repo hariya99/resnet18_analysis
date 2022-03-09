@@ -37,7 +37,7 @@ def main():
     # out_channels = [64,128,256,512]
     num_blocks = [2,2,2,2]
     out_channels = [64,64,256,256]
-    model.assign_net(args.m)
+    model.assign_net(args.m, num_blocks, out_channels)
     model.prepare_data(128, 100, 2)
     model.assign_optimizer(args.o, args.lr)
 

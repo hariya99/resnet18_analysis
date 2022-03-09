@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 
 # local imports
 from cnns import ResNet18
+from lookahead import Lookahead
 
 class Model:
     '''
@@ -93,7 +94,11 @@ class Model:
             # default
             self.optimizer = optim.SGD(self.net.parameters(), lr=lr,
                                 momentum=0.9, weight_decay=5e-4)
+        
+        # test code : lookahead 
+        self.optimizer = Lookahead(base_opt, k=5, alpha=0.5) # Initialize Lookahead
         self.scheduler = self._set_scheduler()
+
 
     def _set_device(self):
         return 'cuda' if (torch.cuda.is_available()) else 'cpu'
