@@ -96,7 +96,7 @@ class Model:
                                 momentum=0.9, weight_decay=5e-4)
         
         # test code : lookahead 
-        self.optimizer = Lookahead(base_opt, k=5, alpha=0.5) # Initialize Lookahead
+        self.optimizer = Lookahead(self.optimizer, k=5, alpha=0.5) # Initialize Lookahead
         self.scheduler = self._set_scheduler()
 
 
