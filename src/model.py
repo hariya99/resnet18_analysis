@@ -51,6 +51,17 @@ class Model:
             self.net = ResNet18(blocks_list, out_channels_list)
             self.net.to(self.device)
 
+    def init_weights(self, init_type="normal"):
+        '''
+            Initialize parameters of linear layer
+        '''
+        if init_type == "normal":
+            nn.init.normal_(self.net.linear.weight, mean=0, std=0.01)
+        elif init_type == "xavier":
+            nn.init.xavier_uniform_(self.net.linear.weight)
+        else:
+            return
+    
     def prepare_data(self, train_batch=128, test_batch=100, workers=2):
         '''
             Supply train, test batch sizes and number of data workers

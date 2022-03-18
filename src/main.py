@@ -1,7 +1,7 @@
 import argparse
-from torchinfo import summary
 from torch import nn
 from model import Model
+from utils import * 
 
 def parse_args():
     
@@ -19,27 +19,6 @@ def parse_args():
     print("Current Args: ", args)
     return args
     # parsing ends 
-    
-def print_params_summary(model, batch_size, channels, rows, cols):
-
-    dash = '='
-    s = 'Pytorch Model Details'
-    rep = int((100 - len(s))/2)
-    
-    print(dash*rep + s + dash*rep)
-    print(model)
-    summary(model, input_size=(batch_size, channels, rows, cols))
-
-def init_weights(model, init_type="normal"):
-    '''
-        Initialize parameters of linear layer
-    '''
-    if init_type == "normal":
-        nn.init.normal_(model.net.linear.weight, mean=0, std=0.01)
-    elif init_type == "xavier":
-        nn.init.xavier_uniform_(model.net.linear.weight)
-    else:
-        return
 
 def main():
     args = parse_args()
@@ -53,8 +32,8 @@ def main():
     model.assign_optimizer(args.o, args.lr)
 
     # initialize weights of linear layer 
-    init_weights(model)
-    
+    model.init_weights()
+
     for epoch in range(args.e): 
         model.train()
     
