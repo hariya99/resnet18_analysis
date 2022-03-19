@@ -28,16 +28,19 @@ def main():
     out_channels = [64,128,256,512]
 
     model.assign_net(args.m, num_blocks, out_channels)
-    model.prepare_data(128, 100, 2)
+    model.prepare_data(256, 200, 2)
     model.assign_optimizer(args.o, args.lr)
 
     # initialize weights of linear layer 
-    model.init_weights()
+    model.init_weights(init_type="xavier")
 
     for epoch in range(args.e): 
         model.train()
     
     model.test()
+    
+    # save parameters 
+    model.save_params()
     
     # print statistics 
     model.print_stats()

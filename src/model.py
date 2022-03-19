@@ -1,3 +1,4 @@
+import os
 # torch imports 
 import torch
 import torch.nn as nn
@@ -107,7 +108,7 @@ class Model:
                                 momentum=0.9, weight_decay=5e-4)
         
         # test code : lookahead 
-        self.optimizer = Lookahead(self.optimizer, k=5, alpha=0.5) # Initialize Lookahead
+        # self.optimizer = Lookahead(self.optimizer, k=5, alpha=0.5) # Initialize Lookahead
         self.scheduler = self._set_scheduler()
 
 
@@ -173,6 +174,22 @@ class Model:
         
         self.test_loss_list.append(test_loss/len(self.test_loader))
         self.test_accuracy_list.append((correct/total) * 100)
+
+    def save_params(self):
+        # Save checkpoint.
+        print('Saving Params..')
+        state = {
+            'net': self.net.state_dict()
+        }
+        if not os.path.isdir('saved_params'):
+            os.mkdir('saved_params')
+        torch.save(state, './saved_params/params.pth')
+
+    def load_params(self):
+        # Load params
+        assert os.path.isdir('saved_params'), 'Error: no saved_params directory found!'
+        checkpoint = torch.load('./saved_params/params.pth')
+        self.net.load_state_dict(checkpoint['net'])
 
     def print_stats(self):
         dash = '*'
