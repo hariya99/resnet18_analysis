@@ -44,14 +44,20 @@ class Model:
         self.best_accuracy = 0.0
         self.best_epoch = 0
         
-    def assign_net(self, net='resnet18', blocks_list=[2,2,2,2], out_channels_list=[64,128,256,512]):
+    def assign_net(self, net='resnet18', 
+                    blocks_list=[2,2,2,2], 
+                    out_channels_list=[64,128,256,512],
+                    pool_kernel_sz=4,
+                    fourth_layer=True):
         ''' 
             net: provide the type of neural net you want to run. 
-            blocks_list: There are 4 layers so provide a list with 4 elements. 
-            Each element is the number of blocks inside a layer.
+            blocks_list: list of number of blocks in each layer. 
+            out_channels_list: list of number of channels in a layer.
+            pool_kernel_sz: average pool kernel size.
         '''
         if(net.lower() == 'resnet18'):
-            self.net = ResNet18(blocks_list, out_channels_list)
+            self.net = ResNet18(blocks_list, out_channels_list, 
+                        pool_kernel_sz=pool_kernel_sz, fourth_layer=fourth_layer)
             self.net.to(self.device)
 
     def init_weights(self, init_type="normal"):
@@ -93,7 +99,7 @@ class Model:
         self.test_loader = torch.utils.data.DataLoader(
             testset, batch_size=test_batch, shuffle=False, num_workers=workers)
 
-    def assign_optimizer(self, optimizer, lr):
+    def assign_optimizer(self, optimizer, lr, lookahead=True):
         # choose optimizer
         if (optimizer.lower() == "sgdn"):
             self.optimizer = optim.SGD(self.net.parameters(), lr=lr,
@@ -110,7 +116,8 @@ class Model:
                                 momentum=0.9, weight_decay=5e-4)
         
         # test code : lookahead 
-        # self.optimizer = Lookahead(self.optimizer, k=5, alpha=0.5) # Initialize Lookahead
+        if lookahead:
+            self.optimizer = Lookahead(self.optimizer, k=5, alpha=0.5) # Initialize Lookahead
         self.scheduler = self._set_scheduler()
 
 
@@ -176,7 +183,7 @@ class Model:
 
     def save_params(self, epoch, file_name):
         # Save checkpoint.
-        print('Saving Params..')
+        # print('Saving Params..')
         state = {
             'net': self.net.state_dict(),
             'best_acc' : self.best_accuracy,

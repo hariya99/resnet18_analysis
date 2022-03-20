@@ -25,12 +25,18 @@ def main():
     args = parse_args()
 
     model = Model()
-    num_blocks = [2,1,1,1]
-    out_channels = [64,128,256,512]
+    # config-1
+    # num_blocks = [2,1,1,1]
+    # out_channels = [64,128,256,512]
+    # model.assign_net(args.m, num_blocks, out_channels, pool_kernel_sz=4)
 
-    model.assign_net(args.m, num_blocks, out_channels)
+    #Config-2
+    num_blocks = [1,1,1]
+    out_channels = [128,256,512]
+    model.assign_net(args.m, num_blocks, out_channels, pool_kernel_sz=5, fourth_layer=False)
+
     model.prepare_data(128, 100, args.dl)
-    model.assign_optimizer(args.o, args.lr)
+    model.assign_optimizer(args.o, args.lr, lookahead=True)
 
     # initialize weights of linear layer 
     # model.init_weights(init_type="xavier")
@@ -38,6 +44,7 @@ def main():
     for epoch in range(args.e): 
         model.train()
         model.test()
+        model.scheduler.step()
         if model.best_accuracy < model.test_accuracy_list[-1]:
             # save parameters
             model.best_accuracy = model.test_accuracy_list[-1] 

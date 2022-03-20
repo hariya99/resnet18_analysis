@@ -1,5 +1,6 @@
 .DS_Store
 data
-scripts
+# scripts
+misc
 src/__pycache__/*
 .vscode
