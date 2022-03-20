@@ -1,0 +1,8 @@
+Current Args:  Namespace(dl=2, e=200, lr=0.03, m='resnet18', o='adam')
+Files already downloaded and verified
+Files already downloaded and verified
+******************************************Model Statistics******************************************
+Train Loss     : 1.171662449836731
+Train Accuracy : 57.95
+Test Loss      : 3.4216620922088623
+Test Accuracy  : 26.08
