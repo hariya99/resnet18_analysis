@@ -174,7 +174,7 @@ class Model:
         self.test_loss_list.append(test_loss/len(self.test_loader))
         self.test_accuracy_list.append((correct/total) * 100)
 
-    def save_params(self, epoch):
+    def save_params(self, epoch, file_name):
         # Save checkpoint.
         print('Saving Params..')
         state = {
@@ -188,7 +188,7 @@ class Model:
         }
         if not os.path.isdir('saved_params'):
             os.mkdir('saved_params')
-        torch.save(state, './saved_params/params.pth')
+        torch.save(state, f'./saved_params/{file_name.strip()}.pth')
 
     def load_params(self):
         # Load params

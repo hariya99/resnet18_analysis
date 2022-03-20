@@ -14,7 +14,8 @@ def parse_args():
     parser.add_argument('-e', metavar="Epoch", default=5, type=int, help='# of epoch')
     parser.add_argument('-m', metavar="Model", default="resnet18", type=str, 
                         help='Model you want to use e.g. resnet18')
-
+    parser.add_argument('-pf', metavar="Param File", default="params", type=str, 
+                        help='Params file name to store params')
     args = parser.parse_args()
     print("Current Args: ", args)
     return args
@@ -28,7 +29,7 @@ def main():
     out_channels = [64,128,256,512]
 
     model.assign_net(args.m, num_blocks, out_channels)
-    model.prepare_data(128, 100, 2)
+    model.prepare_data(128, 100, args.dl)
     model.assign_optimizer(args.o, args.lr)
 
     # initialize weights of linear layer 
@@ -40,7 +41,7 @@ def main():
         if model.best_accuracy < model.test_accuracy_list[-1]:
             # save parameters
             model.best_accuracy = model.test_accuracy_list[-1] 
-            model.save_params(epoch)
+            model.save_params(epoch,args.pf)
     
     # print statistics 
     model.print_stats()
