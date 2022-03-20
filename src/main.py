@@ -28,21 +28,19 @@ def main():
     out_channels = [64,128,256,512]
 
     model.assign_net(args.m, num_blocks, out_channels)
-    model.prepare_data(256, 200, 2)
+    model.prepare_data(128, 100, 2)
     model.assign_optimizer(args.o, args.lr)
 
     # initialize weights of linear layer 
-    model.init_weights(init_type="xavier")
+    # model.init_weights(init_type="xavier")
 
     for epoch in range(args.e): 
         model.train()
         model.test()
         if model.best_accuracy < model.test_accuracy_list[-1]:
             # save parameters
+            model.best_accuracy = model.test_accuracy_list[-1] 
             model.save_params(epoch)
-        else:
-            print("Best Accuracy Achieved...\nQuitting...")
-            break
     
     # print statistics 
     model.print_stats()
