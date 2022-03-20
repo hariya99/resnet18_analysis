@@ -23,7 +23,7 @@ class Model:
         model.assign_optimizer(optimizer, lr) e.g. sgd
         loop for epochs 
             model.train()
-        model.test()
+            model.test()
 
 
     '''
@@ -41,6 +41,8 @@ class Model:
         self.train_accuracy_list = []
         self.test_loss_list = []
         self.test_accuracy_list = []
+        self.best_accuracy = 0.0
+        self.best_epoch = 0
         
     def assign_net(self, net='resnet18', blocks_list=[2,2,2,2], out_channels_list=[64,128,256,512]):
         ''' 
@@ -143,9 +145,6 @@ class Model:
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
         
-        # print statistics 
-        # self._print_stats(f'Correct|Total : {correct}|{total}', 'train',
-        #             train_loss/len(self.train_loader), correct/total)
         self.train_loss_list.append(train_loss/len(self.train_loader))
         self.train_accuracy_list.append((correct/total) * 100)
 
@@ -175,11 +174,17 @@ class Model:
         self.test_loss_list.append(test_loss/len(self.test_loader))
         self.test_accuracy_list.append((correct/total) * 100)
 
-    def save_params(self):
+    def save_params(self, epoch):
         # Save checkpoint.
         print('Saving Params..')
         state = {
-            'net': self.net.state_dict()
+            'net': self.net.state_dict(),
+            'best_acc' : self.best_accuracy,
+            'train_acc' : self.train_accuracy_list,
+            'test_acc' : self.test_accuracy_list,
+            'train_loss' : self.train_loss_list,
+            'test_loss' : self.test_loss_list,
+            'epochs' : epoch 
         }
         if not os.path.isdir('saved_params'):
             os.mkdir('saved_params')
@@ -190,6 +195,12 @@ class Model:
         assert os.path.isdir('saved_params'), 'Error: no saved_params directory found!'
         checkpoint = torch.load('./saved_params/params.pth')
         self.net.load_state_dict(checkpoint['net'])
+        self.best_accuracy = checkpoint['best_acc']
+        self.best_epoch = checkpoint['epochs']
+        self.train_accuracy_list = checkpoint['train_acc']
+        self.test_accuracy_list = checkpoint['test_acc']
+        self.train_loss_list = checkpoint['train_loss']
+        self.test_loss_list = checkpoint['test_loss']
 
     def print_stats(self):
         dash = '*'
@@ -206,7 +217,7 @@ class Model:
         fig, axs = plt.subplots(nrows=2, ncols=2)
         fig.suptitle('Error, Accuracy Plots')
         axs[0, 0].plot(range(len(self.train_loss_list)), self.train_loss_list)
-        axs[0, 0].set_title('Train Error')
+        axs[0, 0].set_title('Train Loss')
         axs[0, 1].plot(range(len(self.train_accuracy_list)), self.train_accuracy_list, 'tab:orange')
         axs[0, 1].set_title('Train Accuracy')
         axs[1, 0].plot(range(len(self.test_loss_list)), self.test_loss_list, 'tab:green')

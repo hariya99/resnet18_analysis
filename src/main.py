@@ -36,11 +36,13 @@ def main():
 
     for epoch in range(args.e): 
         model.train()
-    
-    model.test()
-    
-    # save parameters 
-    model.save_params()
+        model.test()
+        if model.best_accuracy < model.test_accuracy_list[-1]:
+            # save parameters
+            model.save_params(epoch)
+        else:
+            print("Best Accuracy Achieved...\nQuitting...")
+            break
     
     # print statistics 
     model.print_stats()
