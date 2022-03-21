@@ -1,0 +1,8 @@
+Current Args:  Namespace(dl=2, e=200, lr=0.05, m='resnet18', o='adam', pf='config1_adam_lookahead')
+Files already downloaded and verified
+Files already downloaded and verified
+******************************************Model Statistics******************************************
+Train Loss     : 0.6087309562641642
+Train Accuracy : 78.798
+Test Loss      : 0.6240321847796441
+Test Accuracy  : 78.61
