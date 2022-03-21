@@ -1,4 +1,3 @@
-import os
 # torch imports 
 import torch
 import torch.nn as nn
@@ -47,7 +46,7 @@ class Model:
     def assign_net(self, net='resnet18', 
                     blocks_list=[2,2,2,2], 
                     out_channels_list=[64,128,256,512],
-                    pool_kernel_sz=4,
+                    kernel_sizes=[3,1],
                     fourth_layer=True):
         ''' 
             net: provide the type of neural net you want to run. 
@@ -56,8 +55,7 @@ class Model:
             pool_kernel_sz: average pool kernel size.
         '''
         if(net.lower() == 'resnet18'):
-            self.net = ResNet18(blocks_list, out_channels_list, 
-                        pool_kernel_sz=pool_kernel_sz, fourth_layer=fourth_layer)
+            self.net = ResNet18(blocks_list, out_channels_list, kernel_sizes, fourth_layer=fourth_layer)
             self.net.to(self.device)
 
     def init_weights(self, init_type="normal"):
@@ -181,7 +179,7 @@ class Model:
         self.test_loss_list.append(test_loss/len(self.test_loader))
         self.test_accuracy_list.append((correct/total) * 100)
 
-    def save_params(self, epoch, file_name):
+    def save_params(self, epoch, path):
         # Save checkpoint.
         # print('Saving Params..')
         state = {
@@ -193,14 +191,11 @@ class Model:
             'test_loss' : self.test_loss_list,
             'epochs' : epoch 
         }
-        if not os.path.isdir('saved_params'):
-            os.mkdir('saved_params')
-        torch.save(state, f'./saved_params/{file_name.strip()}.pth')
+        torch.save(state, path)
 
-    def load_params(self):
+    def load_params(self, path):
         # Load params
-        assert os.path.isdir('saved_params'), 'Error: no saved_params directory found!'
-        checkpoint = torch.load('./saved_params/params.pth')
+        checkpoint = torch.load(path, map_location=self.device)
         self.net.load_state_dict(checkpoint['net'])
         self.best_accuracy = checkpoint['best_acc']
         self.best_epoch = checkpoint['epochs']
@@ -221,13 +216,25 @@ class Model:
 
 
     def plot_stats(self):
-        fig, axs = plt.subplots(nrows=2, ncols=2)
+        fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(10,7))
         fig.suptitle('Error, Accuracy Plots')
         axs[0, 0].plot(range(len(self.train_loss_list)), self.train_loss_list)
         axs[0, 0].set_title('Train Loss')
+        axs[0, 0].text(0.9,0.6,f'Min Loss {min(self.train_loss_list):.4f}', 
+                       horizontalalignment='right', verticalalignment='top', transform=axs[0, 0].transAxes)
+        
         axs[0, 1].plot(range(len(self.train_accuracy_list)), self.train_accuracy_list, 'tab:orange')
         axs[0, 1].set_title('Train Accuracy')
+        axs[0, 1].text(0.9,0.6,f'Max Accuracy {max(self.train_accuracy_list):.2f}', 
+                       horizontalalignment='right', verticalalignment='top', transform=axs[0, 1].transAxes)
+            
         axs[1, 0].plot(range(len(self.test_loss_list)), self.test_loss_list, 'tab:green')
         axs[1, 0].set_title('Test Loss')
+        axs[1, 0].text(0.9,0.6,f'Min Loss {min(self.test_loss_list):.4f}', 
+                       horizontalalignment='right', verticalalignment='top', transform=axs[1, 0].transAxes)
+            
         axs[1, 1].plot(range(len(self.test_accuracy_list)), self.test_accuracy_list, 'tab:red')
         axs[1, 1].set_title('Test Accuracy')
+        axs[1, 1].text(0.9,0.6,f'Max Accuracy {max(self.test_accuracy_list):.2f}', 
+                       horizontalalignment='right', verticalalignment='top', transform=axs[1, 1].transAxes)
+        plt.tight_layout()

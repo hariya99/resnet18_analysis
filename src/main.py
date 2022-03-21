@@ -23,17 +23,20 @@ def parse_args():
 
 def main():
     args = parse_args()
-
+    path = create_path("saved_params", args.pf)
     model = Model()
+    
     # config-1
-    # num_blocks = [2,1,1,1]
-    # out_channels = [64,128,256,512]
-    # model.assign_net(args.m, num_blocks, out_channels, pool_kernel_sz=4)
+    num_blocks = [2,1,1,1]
+    out_channels = [64,128,256,512]
+    kernel_sizes = [3,1]
+    model.assign_net(args.m, num_blocks, out_channels, kernel_sizes)
 
     #Config-2
-    num_blocks = [1,1,1]
-    out_channels = [128,256,512]
-    model.assign_net(args.m, num_blocks, out_channels, pool_kernel_sz=5, fourth_layer=False)
+    # num_blocks = [1,1,1]
+    # out_channels = [128,256,512]
+    # kernel_sizes = [3,1]
+    # model.assign_net(args.m, num_blocks, out_channels, kernel_sizes, fourth_layer=False)
 
     model.prepare_data(128, 100, args.dl)
     model.assign_optimizer(args.o, args.lr, lookahead=True)
@@ -48,7 +51,7 @@ def main():
         if model.best_accuracy < model.test_accuracy_list[-1]:
             # save parameters
             model.best_accuracy = model.test_accuracy_list[-1] 
-            model.save_params(epoch,args.pf)
+            model.save_params(epoch,path)
     
     # print statistics 
     model.print_stats()
