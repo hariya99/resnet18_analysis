@@ -1,0 +1,9 @@
+Current Args:  Namespace(dl=2, e=200, lr=0.1, m='resnet18', o='sgd', pf='main_config_heinit')
+Files already downloaded and verified
+Files already downloaded and verified
+using He init
+******************************************Model Statistics******************************************
+Train Loss     : 0.0027537299400490836
+Train Accuracy : 100.0
+Test Loss      : 0.18524377934634687
+Test Accuracy  : 94.8
