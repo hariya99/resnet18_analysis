@@ -66,6 +66,8 @@ class Model:
             nn.init.normal_(self.net.linear.weight, mean=0, std=0.01)
         elif init_type == "xavier":
             nn.init.xavier_uniform_(self.net.linear.weight)
+        elif init_type == 'he':
+            nn.init.kaiming_uniform_(self.net.linear.weight, nonlinearity='relu')
         else:
             return
     
