@@ -16,6 +16,8 @@ def parse_args():
                         help='Model you want to use e.g. resnet18')
     parser.add_argument('-pf', metavar="Param File", default="params", type=str, 
                         help='Params file name to store params')
+    parser.add_argument('-ini', metavar="Weight Init", default="he", type=str, 
+                        help='Weight Initializer')
     args = parser.parse_args()
     print("Current Args: ", args)
     return args
@@ -27,22 +29,26 @@ def main():
     model = Model()
     
     # config-1
-    num_blocks = [2,1,1,1]
-    out_channels = [64,128,256,512]
-    kernel_sizes = [3,1]
-    model.assign_net(args.m, num_blocks, out_channels, kernel_sizes)
-
-    #Config-2
-    # num_blocks = [1,1,1]
-    # out_channels = [128,256,512]
+    # num_blocks = [2,1,1,1]
+    # conv_channels = 64
     # kernel_sizes = [3,1]
-    # model.assign_net(args.m, num_blocks, out_channels, kernel_sizes, fourth_layer=False)
 
-    model.prepare_data(128, 100, args.dl)
+    # Config-2
+    # num_blocks = [1,1,1]
+    # conv_channels = 128
+    # kernel_sizes = [3,1]
+
+    # Config-3 - Best so far
+    num_blocks = [4,3,3]
+    conv_channels = 64
+    kernel_sizes = [3,1]
+
+    model.assign_net(args.m, num_blocks, conv_channels, kernel_sizes)
+    model.prepare_data(256, 256, args.dl)
     model.assign_optimizer(args.o, args.lr, lookahead=True)
 
     # initialize weights of linear layer 
-    # model.init_weights(init_type="xavier")
+    model.init_weights(init_type=args.ini)
 
     for epoch in range(args.e): 
         model.train()

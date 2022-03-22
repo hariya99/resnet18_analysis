@@ -45,31 +45,36 @@ class Model:
         
     def assign_net(self, net='resnet18', 
                     blocks_list=[2,2,2,2], 
-                    out_channels_list=[64,128,256,512],
-                    kernel_sizes=[3,1],
-                    fourth_layer=True):
+                    conv_channels=64,
+                    kernel_sizes=[3,1]):
         ''' 
             net: provide the type of neural net you want to run. 
             blocks_list: list of number of blocks in each layer. 
-            out_channels_list: list of number of channels in a layer.
+            conv_channels: first layer channels.
             pool_kernel_sz: average pool kernel size.
         '''
         if(net.lower() == 'resnet18'):
-            self.net = ResNet18(blocks_list, out_channels_list, kernel_sizes, fourth_layer=fourth_layer)
+            self.net = ResNet18(blocks_list, conv_channels, kernel_sizes)
             self.net.to(self.device)
 
     def init_weights(self, init_type="normal"):
         '''
             Initialize parameters of linear layer
         '''
-        if init_type == "normal":
-            nn.init.normal_(self.net.linear.weight, mean=0, std=0.01)
-        elif init_type == "xavier":
-            nn.init.xavier_uniform_(self.net.linear.weight)
-        elif init_type == 'he':
-            nn.init.kaiming_uniform_(self.net.linear.weight, nonlinearity='relu')
-        else:
-            return
+        def _apply_init(m):
+            if (isinstance(m, nn.Linear) or isinstance(m, nn.Conv2d)) and hasattr(m, 'weight'):
+                if init_type == "normal":
+                    nn.init.normal_(m.weight.data, mean=0, std=0.5)
+                elif init_type == "xavier":
+                    nn.init.normal_(m.weight.data)
+                elif init_type == 'he':
+                    nn.init.kaiming_uniform_(m.weight.data, nonlinearity='relu')
+                else:
+                    pass
+        
+        self.net.apply(_apply_init)
+                
+
     
     def prepare_data(self, train_batch=128, test_batch=100, workers=2):
         '''
@@ -115,7 +120,7 @@ class Model:
             self.optimizer = optim.SGD(self.net.parameters(), lr=lr,
                                 momentum=0.9, weight_decay=5e-4)
         
-        # test code : lookahead 
+        # lookahead 
         if lookahead:
             self.optimizer = Lookahead(self.optimizer, k=5, alpha=0.5) # Initialize Lookahead
         self.scheduler = self._set_scheduler()
