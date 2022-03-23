@@ -1,0 +1,8 @@
+Current Args:  Namespace(dl=2, e=200, ini='xavier', lr=0.1, m='resnet18', o='sgd', pf='b433_init_xavier')
+Files already downloaded and verified
+Files already downloaded and verified
+******************************************Model Statistics******************************************
+Train Loss     : 0.0014282928741708094
+Train Accuracy : 100.0
+Test Loss      : 0.23633757550269366
+Test Accuracy  : 94.25
