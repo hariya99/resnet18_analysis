@@ -44,7 +44,7 @@ def main():
     kernel_sizes = [3,1]
 
     model.assign_net(args.m, num_blocks, conv_channels, kernel_sizes)
-    model.prepare_data(256, 256, args.dl)
+    model.prepare_data(128, 128, args.dl)
     model.assign_optimizer(args.o, args.lr, lookahead=True)
 
     # initialize weights of linear layer 
