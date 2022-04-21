@@ -25,7 +25,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    path = create_path("saved_params", args.pf)
+    # path = create_path("saved_params", args.pf)
     model = Model()
     
     # config-1
@@ -39,31 +39,36 @@ def main():
     # kernel_sizes = [3,1]
 
     # Config-3 - Best so far
-    num_blocks = [4,3,3]
+    num_blocks = [4,4,3]
     conv_channels = 64
     kernel_sizes = [3,1]
 
     model.assign_net(args.m, num_blocks, conv_channels, kernel_sizes)
-    model.prepare_data(128, 128, args.dl)
-    model.assign_optimizer(args.o, args.lr, lookahead=True)
+    model.prepare_data(512, 512, args.dl)
+    model.assign_optimizer(args.o, args.lr, lookahead=False)
 
     # initialize weights of linear layer 
     model.init_weights(init_type=args.ini)
 
+    # pretrain
+    for epoch in range(args.e): 
+        model.pre_train()
+        model.scheduler.step()
+    
     for epoch in range(args.e): 
         model.train()
         model.test()
         model.scheduler.step()
-        if model.best_accuracy < model.test_accuracy_list[-1]:
-            # save parameters
-            model.best_accuracy = model.test_accuracy_list[-1] 
-            model.save_params(epoch,path)
+        # if model.best_accuracy < model.test_accuracy_list[-1]:
+        #     # save parameters
+        #     model.best_accuracy = model.test_accuracy_list[-1] 
+        #     model.save_params(epoch,path)
     
     # print statistics 
     model.print_stats()
     
     # plot the statistics 
-    # model.plot_stats()
+    model.plot_stats()
 
     # print summary of the model and its parameters
     # print_params_summary(model.net, 128, 3, 32, 32)

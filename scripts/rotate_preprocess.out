@@ -1,0 +1,9 @@
+Current Args:  Namespace(dl=2, e=10, ini='he', lr=0.1, m='resnet18', o='sgd', pf='params')
+Traceback (most recent call last):
+  File "../src/main.py", line 72, in <module>
+    main()
+  File "../src/main.py", line 46, in main
+    model.assign_net(args.m, num_blocks, conv_channels, kernel_sizes)
+  File "/home/hpc4473/deep_learning/resnet18_analysis/src/model.py", line 61, in assign_net
+    if device == 'cuda':
+NameError: name 'device' is not defined

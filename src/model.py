@@ -57,6 +57,11 @@ class Model:
             self.net = ResNet18(blocks_list, conv_channels, kernel_sizes)
             self.net.to(self.device)
 
+            # parallelize the network training 
+            if self.device == 'cuda':
+                self.net = torch.nn.DataParallel(self.net)
+                cudnn.benchmark = True
+
     def init_weights(self, init_type="normal"):
         '''
             Initialize parameters of linear layer
@@ -134,6 +139,45 @@ class Model:
 
     def _set_scheduler(self):
         return torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=200)
+
+    def preprocess(self, images, targets):
+        batch_size = images.shape[0]
+        images_90 = torch.flip(images.transpose(2, 3), (2,))
+        images_180 = torch.flip(images, (2, 3))
+        images_270 = torch.flip(images, (2,)).transpose(2, 3)
+
+        images_batch = torch.cat((images, images_90, images_180, images_270), dim=0)
+        # targets = torch.arange(4).long().repeat(batch_size)
+        # targets = targets.view(batch_size, 4).transpose(0, 1)
+        # targets = targets.contiguous().view(-1)
+        targets = targets.repeat(4)
+        return images_batch, targets
+
+    def pre_train(self):
+
+        self.net.train()
+        train_loss = 0
+        correct = 0
+        total = 0
+       
+        for batch_idx, (inputs, targets) in enumerate(self.train_loader):
+            
+            pre_inputs, pre_targets = self.preprocess(inputs, targets)
+            pre_inputs, pre_targets = pre_inputs.to(self.device), pre_targets.to(self.device)
+            self.optimizer.zero_grad()
+            outputs = self.net(pre_inputs)
+            loss = self.criterion(outputs, pre_targets)
+            loss.backward()
+            self.optimizer.step()
+            # train_loss += loss.item()
+            # _, predicted = outputs.max(1)
+            # total += pre_targets.size(0)
+            # correct += predicted.eq(pre_targets).sum().item()
+
+        
+        # self.train_loss_list.append(train_loss/(batch_idx + 1))
+        # self.train_accuracy_list.append((correct/total) * 100)
+
     # Training
     def train(self):
 
@@ -144,7 +188,7 @@ class Model:
 
         
         for batch_idx, (inputs, targets) in enumerate(self.train_loader):
-            
+
             inputs, targets = inputs.to(self.device), targets.to(self.device)
             self.optimizer.zero_grad()
             outputs = self.net(inputs)
@@ -157,7 +201,7 @@ class Model:
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
         
-        self.train_loss_list.append(train_loss/len(self.train_loader))
+        self.train_loss_list.append(train_loss/(batch_idx + 1))
         self.train_accuracy_list.append((correct/total) * 100)
 
 
@@ -183,7 +227,7 @@ class Model:
         # self._print_stats(f'Correct|Total : {correct}|{total}', 'test',
         #             test_loss/len(self.test_loader), correct/total)
         
-        self.test_loss_list.append(test_loss/len(self.test_loader))
+        self.test_loss_list.append(test_loss/(batch_idx + 1))
         self.test_accuracy_list.append((correct/total) * 100)
 
     def save_params(self, epoch, path):
@@ -245,3 +289,4 @@ class Model:
         axs[1, 1].text(0.9,0.6,f'Max Accuracy {max(self.test_accuracy_list):.2f}', 
                        horizontalalignment='right', verticalalignment='top', transform=axs[1, 1].transAxes)
         plt.tight_layout()
+        plt.savefig("self_supervised.pdf")
