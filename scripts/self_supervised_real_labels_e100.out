@@ -1,0 +1,9 @@
+Current Args:  Namespace(dl=2, e=100, ini='he', lr=0.1, m='resnet18', o='sgd', pf='params')
+Files already downloaded and verified
+Files already downloaded and verified
+******************************************Model Statistics******************************************
+Train Loss     : 0.001419956926541517
+Train Accuracy : 100.0
+Test Loss      : 0.15125815868377684
+Test Accuracy  : 96.09
+Time taken by the job in minutes: 103.497

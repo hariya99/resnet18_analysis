@@ -266,7 +266,7 @@ class Model:
         print(f"Test Accuracy  : {max(self.test_accuracy_list)}")
 
 
-    def plot_stats(self):
+    def plot_stats(self, plot_name):
         fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(10,7))
         fig.suptitle('Error, Accuracy Plots')
         axs[0, 0].plot(range(len(self.train_loss_list)), self.train_loss_list)
@@ -289,4 +289,4 @@ class Model:
         axs[1, 1].text(0.9,0.6,f'Max Accuracy {max(self.test_accuracy_list):.2f}', 
                        horizontalalignment='right', verticalalignment='top', transform=axs[1, 1].transAxes)
         plt.tight_layout()
-        plt.savefig("self_supervised.pdf")
+        plt.savefig(f"{plot_name}.pdf")

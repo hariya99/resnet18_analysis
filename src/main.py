@@ -68,10 +68,14 @@ def main():
     model.print_stats()
     
     # plot the statistics 
-    model.plot_stats()
+    model.plot_stats("self_supervised_e100")
 
     # print summary of the model and its parameters
     # print_params_summary(model.net, 128, 3, 32, 32)
 
 if __name__ == "__main__":
+    import time 
+    start = time.time()
     main()
+    end = time.time()
+    print(f"Time taken by the job in minutes: {(end - start)/60 :.3f}")
